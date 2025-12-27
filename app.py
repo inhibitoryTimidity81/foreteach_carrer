@@ -2,14 +2,18 @@ import streamlit as st
 import google.generativeai as genai
 from pypdf import PdfReader
 
-# --- CONFIGURATION (Secure for Public Deploy) ---
+# --- SECURITY CHECK ---
+# We do not paste the key here. We ask Streamlit for it.
 if "GOOGLE_API_KEY" in st.secrets:
+    # Key found in the "safe" box. Configure the AI.
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 else:
-    st.error("Missing API Key. Please add it to Streamlit Secrets.")
+    # Key missing. Stop the app safely.
+    st.error("🚨 Critical Error: API Key missing.")
+    st.info("Configuring this app? Go to Streamlit Cloud -> Advanced Settings -> Secrets and add GOOGLE_API_KEY.")
+    st.stop() # This halts the app so it doesn't crash ugly
 
-
-# --- THE BRAIN (UPDATED SYSTEM PROMPT) ---
+# --- THE BRAIN (SYSTEM PROMPT) ---
 SYSTEM_PROMPT = """
 You are a senior technical career coach at ForeTeach. 
 Analyze the resume provided and generate a detailed career report.
@@ -47,7 +51,6 @@ You MUST output your response in strict Markdown format, using the EXACT heading
 # --- VISUAL SETUP ---
 st.set_page_config(page_title="ForeTeach CareerGPT", layout="centered")
 
-# CSS to make the UI look professional (White Background + readable buttons)
 st.markdown("""
     <style>
     /* 1. Main Page Background */
@@ -116,13 +119,9 @@ st.markdown("""
 st.title("ForeTeach Career Scorer 🚀")
 st.write("Upload your resume to generate your **Personalized Career Strategy**.")
 
-# 1. The Upload Button
 uploaded_file = st.file_uploader("Drop your Resume here (PDF)...", type=['pdf'])
-
-# 2. Variable to hold text
 resume_text = ""
 
-# 3. Process the file if uploaded
 if uploaded_file is not None:
     try:
         reader = PdfReader(uploaded_file)
@@ -132,21 +131,18 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Error reading PDF: {e}")
 
-# 4. The Analyze Button
 if st.button("Analyze My Career Strategy"):
     if resume_text:
         with st.spinner("Analyzing skill gaps & calculating market salary..."):
             try:
-                # Using the standard model to avoid "Not Found" errors
+                # Use the stable model for production safety
                 model = genai.GenerativeModel('gemini-3-flash-preview')
                 
                 response = model.generate_content(SYSTEM_PROMPT + "\n\nRESUME TEXT:\n" + resume_text)
                 
-                # Show Result
                 st.markdown("---")
                 st.markdown(response.text)
                 
-                # The Upsell Link
                 st.markdown("---")
                 st.link_button("🔓 Unlock Full Roadmap & Referrals (ForeTeach Premium)", "https://foreteach.com")
                 
