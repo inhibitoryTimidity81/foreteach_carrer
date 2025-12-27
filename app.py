@@ -3,11 +3,10 @@ import google.generativeai as genai
 from pypdf import PdfReader
 
 # --- CONFIGURATION ---
-# Replace with your actual key!
-GOOGLE_API_KEY = "YOUR_GEMINI_API_KEY_HERE" 
-
-genai.configure(api_key="AIzaSyA_AgjydL30QYRoMbmKuKPPkjIwnUJORNQ")
-
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+else:
+    st.error("Missing API Key. Please add it to Streamlit Secrets.")
 # --- THE BRAIN (SYSTEM PROMPT) ---
 SYSTEM_PROMPT = """
 You are CareerGPT, a strict senior recruiter for ForeTeach.
@@ -134,4 +133,5 @@ if st.button("Analyze My Career"):
             except Exception as e:
                 st.error(f"Error connecting to AI: {e}")
     else:
+
         st.warning("⚠️ Please upload a PDF first!")
